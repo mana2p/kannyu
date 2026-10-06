@@ -51,13 +51,16 @@ function line(ctx, x1, y1, x2, y2) {
 // ---------- Three.js シーン ----------
 const renderer = new THREE.WebGLRenderer({ canvas: el('stage'), antialias: true, alpha: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.95;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const scene = new THREE.Scene();
-scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+const pmremGenerator = new THREE.PMREMGenerator(renderer);
+scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+pmremGenerator.dispose();
 scene.environmentIntensity = 0.35; // 映り込みは控えめに。主役は斜光
 
 const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
@@ -82,7 +85,7 @@ controls.addEventListener('start', () => {
 function makeBowlGeometry() {
   const profile = [[0, 0.07], [0.28, 0.07], [0.31, 0], [0.38, 0], [0.4, 0.1], [0.47, 0.15], [0.78, 0.36], [0.97, 0.68],
     [1.04, 1.0], [1.05, 1.1], [1.02, 1.14], [0.98, 1.1], [0.93, 0.82], [0.74, 0.45], [0.45, 0.25], [0, 0.2]];
-  const curve = new THREE.SplineCurve(profile.map(([x, y]) => new THREE.Vector2(x, y)));
+  const curve = new THREE.CatmullRomCurve2(profile.map(([x, y]) => new THREE.Vector2(x, y)));
   const pts = curve.getSpacedPoints(240).map((p) => p.setX(Math.max(0.001, p.x)));
   return new THREE.LatheGeometry(pts, 200);
 }
@@ -293,11 +296,17 @@ resize();
 fire();
 
 // ---------- ループ ----------
-const clock = new THREE.Clock();
-renderer.setAnimationLoop(() => {
-  const dt = Math.min(clock.getDelta(), 1 / 20);
+let prevTime = performance.now();
+renderer.setAnimationLoop((time) => {
+  const dt = Math.min((time - prevTime) / 1000, 1 / 20);
+  prevTime = time;
   const sdt = dt * speed;
-  elapsed += sdt;
+
+  // 室温（20.5℃以下）に達してひび割れが落ち着いたらタイマーの進行をストップ
+  const currentTemp = 20 + 1210 * Math.exp(-elapsed / COOL_TAU);
+  if (currentTemp > 20.5) {
+    elapsed += sdt;
+  }
   const temp = 20 + 1210 * Math.exp(-elapsed / COOL_TAU);
 
   for (const e of sim.step(sdt, temp)) handle(e);
