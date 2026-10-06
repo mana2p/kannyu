@@ -1,0 +1,227 @@
+:root {
+  --sumi: #0e0d0b;
+  --sumi-2: #1a1814;
+  --washi: #e9e2d3;
+  --washi-dim: #a59d8c;
+  --line: rgba(233, 226, 211, 0.14);
+  --shu: #b4432a; /* 朱：落款の一点だけに使う */
+  --celadon: #9fbfae;
+  --mincho: 'Shippori Mincho', serif;
+  --gothic: 'Zen Kaku Gothic New', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; }
+
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  background:
+    radial-gradient(120% 90% at 62% 38%, #2a2620 0%, var(--sumi-2) 45%, var(--sumi) 100%);
+  color: var(--washi);
+  font-family: var(--gothic);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 和紙っぽい粒子。SVG ノイズを薄く重ねるだけ */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.09;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+#stage { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+
+/* ---------- 縦書きタイトル ---------- */
+.title {
+  position: fixed;
+  top: clamp(24px, 6vh, 64px);
+  left: clamp(20px, 4vw, 56px);
+  writing-mode: vertical-rl;
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  animation: rise 1.6s cubic-bezier(.2, .7, .1, 1) both;
+}
+
+.title h1 {
+  font-family: var(--mincho);
+  font-weight: 800;
+  font-size: clamp(56px, 8vw, 104px);
+  letter-spacing: 0.18em;
+  line-height: 1;
+}
+
+.title-sub {
+  font-family: var(--mincho);
+  font-size: 15px;
+  letter-spacing: 0.5em;
+  color: var(--washi-dim);
+  padding-top: 0.6em;
+}
+
+.seal {
+  writing-mode: horizontal-tb;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin-top: 8px;
+  border: 1.5px solid var(--shu);
+  border-radius: 3px;
+  color: var(--shu);
+  font-family: var(--mincho);
+  font-weight: 800;
+  font-size: 17px;
+  transform: rotate(-4deg);
+}
+
+/* ---------- 右の操作盤 ---------- */
+.panel {
+  position: fixed;
+  top: 50%;
+  right: clamp(16px, 3.5vw, 52px);
+  transform: translateY(-50%);
+  width: 248px;
+  display: grid;
+  gap: 28px;
+  padding: 28px 24px;
+  background: linear-gradient(160deg, rgba(30, 27, 23, 0.62), rgba(14, 13, 11, 0.5));
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  backdrop-filter: blur(14px) saturate(1.1);
+  animation: rise 1.6s .25s cubic-bezier(.2, .7, .1, 1) both;
+}
+
+.label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  color: var(--washi-dim);
+}
+
+.label output { letter-spacing: 0.05em; color: var(--washi); font-family: var(--mincho); }
+
+.temp {
+  font-family: var(--mincho);
+  font-weight: 600;
+  font-size: 54px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.temp small { font-size: 18px; margin-left: 4px; color: var(--washi-dim); }
+
+.phase {
+  font-family: var(--mincho);
+  font-size: 15px;
+  letter-spacing: 0.16em;
+  white-space: nowrap;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+  transition: color .8s;
+}
+
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+.stats dt { font-size: 10px; letter-spacing: 0.2em; color: var(--washi-dim); }
+.stats dd { font-family: var(--mincho); font-size: 20px; font-variant-numeric: tabular-nums; }
+
+.controls { display: grid; gap: 12px; }
+
+.segmented { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); margin-bottom: 10px; }
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: background .4s, color .4s, border-color .4s;
+}
+
+button:focus-visible, input:focus-visible { outline: 1px solid var(--washi); outline-offset: 3px; }
+
+.segmented button {
+  padding: 10px 0;
+  font-family: var(--mincho);
+  font-size: 15px;
+  letter-spacing: 0.3em;
+  color: var(--washi-dim);
+}
+
+.segmented button[aria-pressed='true'] { background: rgba(233, 226, 211, 0.1); color: var(--washi); }
+.segmented button:hover { color: var(--washi); }
+
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 20px;
+  background: none;
+  margin-bottom: 10px;
+}
+
+input[type='range']::-webkit-slider-runnable-track { height: 1px; background: var(--line); }
+input[type='range']::-moz-range-track { height: 1px; background: var(--line); }
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 11px;
+  height: 11px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: var(--washi);
+}
+input[type='range']::-moz-range-thumb { width: 11px; height: 11px; border: 0; border-radius: 50%; background: var(--washi); }
+
+.buttons { display: grid; gap: 8px; }
+
+.buttons button { padding: 12px 0; font-size: 13px; letter-spacing: 0.32em; }
+
+.ghost { border: 1px solid var(--line); color: var(--washi-dim); }
+.ghost:hover, .ghost[aria-pressed='true'] { color: var(--washi); border-color: rgba(233, 226, 211, 0.4); }
+
+.primary { background: var(--washi); color: var(--sumi); font-weight: 500; }
+.primary:hover { background: #fff; }
+
+/* ---------- 展開図 ---------- */
+.unwrap {
+  position: fixed;
+  left: clamp(20px, 4vw, 56px);
+  bottom: clamp(20px, 5vh, 48px);
+  width: min(300px, 40vw);
+  animation: rise 1.6s .5s cubic-bezier(.2, .7, .1, 1) both;
+}
+
+.unwrap canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  box-shadow: 0 18px 40px -20px #000;
+}
+
+.unwrap figcaption { margin-top: 8px; font-size: 10px; letter-spacing: 0.2em; color: var(--washi-dim); }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+}
+
+.panel { animation-name: rise-panel; }
+@keyframes rise-panel {
+  from { opacity: 0; transform: translateY(calc(-50% + 14px)); }
+}
+
+@media (max-width: 760px) {
+  .panel { top: auto; bottom: 12px; right: 12px; left: 12px; width: auto; transform: none; gap: 16px; padding: 18px; }
+  @keyframes rise-panel { from { opacity: 0; } }
+  .unwrap { display: none; }
+  .temp { font-size: 40px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
