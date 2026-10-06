@@ -215,11 +215,126 @@ input[type='range']::-moz-range-thumb { width: 11px; height: 11px; border: 0; bo
   from { opacity: 0; transform: translateY(calc(-50% + 14px)); }
 }
 
+/* ---------- パネル折りたたみ（モバイル用） ---------- */
+.panel-toggle {
+  display: none;
+}
+
+@media (min-width: 761px) {
+  .panel-toggle { display: none !important; }
+}
+
 @media (max-width: 760px) {
-  .panel { top: auto; bottom: 12px; right: 12px; left: 12px; width: auto; transform: none; gap: 16px; padding: 18px; }
-  @keyframes rise-panel { from { opacity: 0; } }
+  .title {
+    top: 16px;
+    left: 16px;
+    gap: 10px;
+  }
+  .title h1 {
+    font-size: 36px;
+    letter-spacing: 0.12em;
+  }
+  .title-sub {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    padding-top: 0.4em;
+  }
+  .seal {
+    width: 22px;
+    height: 22px;
+    font-size: 12px;
+    margin-top: 2px;
+  }
+
   .unwrap { display: none; }
-  .temp { font-size: 40px; }
+
+  /* ボトムシートスタイルのパネル */
+  .panel {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    transform: none;
+    gap: 16px;
+    padding: 12px 20px 24px;
+    border-radius: 18px 18px 0 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    background: rgba(16, 14, 12, 0.88);
+    backdrop-filter: blur(20px) saturate(1.2);
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
+    max-height: 80vh;
+    overflow-y: auto;
+    transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), padding 0.4s;
+    animation: none;
+  }
+
+  /* トグルボタン（ツマミバー付き） */
+  .panel-toggle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 100%;
+    padding: 4px 0 8px;
+    background: none;
+    border: none;
+    color: var(--washi-dim);
+    font-family: var(--mincho);
+    font-size: 11px;
+    letter-spacing: 0.25em;
+  }
+
+  .toggle-bar {
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(233, 226, 211, 0.3);
+    margin-bottom: 2px;
+  }
+
+  .toggle-icon {
+    font-size: 9px;
+    transition: transform 0.3s ease;
+  }
+
+  .panel.is-open .toggle-icon {
+    transform: rotate(180deg);
+  }
+
+  /* 非展開時はコンパクト表示 */
+  .panel:not(.is-open) .controls,
+  .panel:not(.is-open) .stats {
+    display: none;
+  }
+
+  .panel:not(.is-open) .phase {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .readout {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .temp {
+    font-size: 38px;
+    line-height: 1;
+  }
+
+  .temp small {
+    font-size: 14px;
+  }
+
+  .phase {
+    font-size: 13px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

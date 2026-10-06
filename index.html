@@ -27,7 +27,12 @@
     <span class="seal" aria-hidden="true">窯</span>
   </header>
 
-  <main class="panel" aria-label="窯の操作">
+  <main class="panel" id="panel" aria-label="窯の操作">
+    <button id="panel-toggle" class="panel-toggle" type="button" aria-expanded="false" aria-label="操作盤の開閉">
+      <span class="toggle-bar"></span>
+      <span class="toggle-text">操作盤</span>
+      <span class="toggle-icon">▲</span>
+    </button>
     <section class="readout" aria-live="polite">
       <p class="label">釉面温度</p>
       <p class="temp"><span id="temp">1230</span><small>℃</small></p>

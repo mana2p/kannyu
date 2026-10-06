@@ -66,6 +66,18 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(0.2, 0.45, 0); // 右の操作盤に被らないよう器を少し左に置く
 Object.assign(controls, { enableDamping: true, enablePan: false, minDistance: 2.2, maxDistance: 7, maxPolarAngle: 1.48 });
 
+// スマホ操作時に3D視界を広げるため、茶碗を触ったら自動で操作盤をたたむ
+controls.addEventListener('start', () => {
+  if (innerWidth <= 760 && panel && panel.classList.contains('is-open')) {
+    panel.classList.remove('is-open');
+    if (toggleBtn) {
+      toggleBtn.setAttribute('aria-expanded', 'false');
+      const txt = toggleBtn.querySelector('.toggle-text');
+      if (txt) txt.textContent = '操作盤';
+    }
+  }
+});
+
 // 茶碗: 高台 → 胴 → 口縁 → 見込み を1本の断面線にして回転体に。UV の v = 断面に沿った距離
 function makeBowlGeometry() {
   const profile = [[0, 0.07], [0.28, 0.07], [0.31, 0], [0.38, 0], [0.4, 0.1], [0.47, 0.15], [0.78, 0.36], [0.97, 0.68],
@@ -253,10 +265,28 @@ el('sound').addEventListener('click', (ev) => {
 });
 el('refire').addEventListener('click', fire);
 
+const panel = el('panel');
+const toggleBtn = el('panel-toggle');
+if (toggleBtn) {
+  toggleBtn.addEventListener('click', () => {
+    const isOpen = panel.classList.toggle('is-open');
+    toggleBtn.setAttribute('aria-expanded', String(isOpen));
+    const txt = toggleBtn.querySelector('.toggle-text');
+    if (txt) txt.textContent = isOpen ? '操作盤を閉じる' : '操作盤';
+  });
+}
+
 function resize() {
   renderer.setSize(innerWidth, innerHeight, false);
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
+
+  // スマホ時は器を画面中央に配置、PC時は右の操作盤を考慮してやや左寄りに配置
+  if (innerWidth <= 760) {
+    controls.target.set(0, 0.45, 0);
+  } else {
+    controls.target.set(0.2, 0.45, 0);
+  }
 }
 addEventListener('resize', resize);
 resize();
