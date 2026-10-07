@@ -35,6 +35,18 @@ export function calcStressTensor(node) {
   return { s1, s2, theta, v1x, v1y, dx, dy };
 }
 
+/** 釉薬の厚みムラマップ h(y): 高台・見込み底に溜まり、口縁(ふち)は薄くなる物理プロファイル */
+export function getGlazeThickness(y, H) {
+  const v = Math.max(0, Math.min(1, y / H));
+  // 見込みの底(v=1.0)に向かって厚く溜まり(最大1.6倍)、口縁(v=0.45付近)は垂れて薄く(0.55倍)なる
+  let h = 0.75 + 0.85 * Math.pow(v, 2.2);
+  if (v > 0.35 && v < 0.55) {
+    const lipRatio = 1.0 - Math.sin((v - 0.35) / 0.2 * Math.PI) * 0.35;
+    h *= lipRatio;
+  }
+  return h;
+}
+
 /** 旧ネットワークのダミー作成関数（後方互換） */
 export function buildNetwork({ width, height, cell, rng }) {
   const cols = Math.max(3, Math.round(width / cell));
@@ -107,8 +119,10 @@ export class CrackSim {
         if (this.rng() < L.rate * dt * (stressCurve * 3.5 + 0.05) && this.tips.length < 180) {
           const sx = this.rng() * this.W;
           const sy = this.rng() * this.H;
+          const h = getGlazeThickness(sy, this.H);
 
-          if (!this.nearCrack(sx, sy, L.cell * 0.38)) {
+          // 釉薬が厚い底(h>1.2)ではエネルギー解放の影響で大きなひび間隔になり、薄い口縁(h<0.7)では細かく密集
+          if (!this.nearCrack(sx, sy, L.cell * 0.38 * h)) {
             this.nucleateContinuous(L, sx, sy, ev);
           }
         }
@@ -174,10 +188,12 @@ export class CrackSim {
 
     const nx = tip.x + tip.vx * speed;
     const ny = tip.y + tip.vy * speed;
+    const thickness = getGlazeThickness(ny, this.H);
+    const width = tip.L.width * (0.65 + 0.45 * thickness);
 
     // 開放境界（器の端）チェック
     if (ny < 0 || ny > this.H) {
-      const seg = { id: tip.id, level: tip.L.li, x1: tip.x, y1: tip.y, x2: nx, y2: ny, width: tip.L.width };
+      const seg = { id: tip.id, level: tip.L.li, x1: tip.x, y1: tip.y, x2: nx, y2: ny, width };
       this.addSegmentToGrid(seg);
       ev.push({ type: 'segment', ...seg });
       return this.finishTip(tip, ev, [nx, ny], false);
@@ -204,14 +220,14 @@ export class CrackSim {
     // 既存の亀裂壁にヒット ➔ 90度直交 T字衝突で完結
     if (hitSeg && closestPt) {
       const targetX = closestPt[0], targetY = closestPt[1];
-      const seg = { id: tip.id, level: tip.L.li, x1: tip.x, y1: tip.y, x2: targetX, y2: targetY, width: tip.L.width };
+      const seg = { id: tip.id, level: tip.L.li, x1: tip.x, y1: tip.y, x2: targetX, y2: targetY, width };
       this.addSegmentToGrid(seg);
       ev.push({ type: 'segment', ...seg });
       return this.finishTip(tip, ev, [targetX, targetY], true);
     }
 
     // 通常前進
-    const seg = { id: tip.id, level: tip.L.li, x1: tip.x, y1: tip.y, x2: nx, y2: ny, width: tip.L.width };
+    const seg = { id: tip.id, level: tip.L.li, x1: tip.x, y1: tip.y, x2: nx, y2: ny, width };
     this.addSegmentToGrid(seg);
     ev.push({ type: 'segment', ...seg });
 
