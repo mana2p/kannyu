@@ -85,7 +85,7 @@ controls.addEventListener('start', () => {
 function makeBowlGeometry() {
   const profile = [[0, 0.07], [0.28, 0.07], [0.31, 0], [0.38, 0], [0.4, 0.1], [0.47, 0.15], [0.78, 0.36], [0.97, 0.68],
     [1.04, 1.0], [1.05, 1.1], [1.02, 1.14], [0.98, 1.1], [0.93, 0.82], [0.74, 0.45], [0.45, 0.25], [0, 0.2]];
-  const curve = new THREE.CatmullRomCurve2(profile.map(([x, y]) => new THREE.Vector2(x, y)));
+  const curve = new THREE.SplineCurve(profile.map(([x, y]) => new THREE.Vector2(x, y)));
   const pts = curve.getSpacedPoints(240).map((p) => p.setX(Math.max(0.001, p.x)));
   return new THREE.LatheGeometry(pts, 200);
 }
